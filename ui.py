@@ -261,7 +261,7 @@ def stop_live_monitoring_session():
 # ==========================================
 def create_ui():
     # Pass structural embedded CSS string variable safely inside Blocks
-    with gr.Blocks(theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate")) as demo:
+    with gr.Blocks(theme=gr.themes.Soft()) as demo:
         gr.HTML("<div class='header-box'><h1>Patient Monitoring System</h1></div>")
 
         with gr.Row():
@@ -489,7 +489,7 @@ if __name__ == "__main__":
     app.launch(
         share=False,
         server_name=host,
-        server_port=int(os.environ.get("PORT"))
+        server_port=int(os.environ.get("PORT", 10000)),
         css=css_styles,
         show_error=True
     )
