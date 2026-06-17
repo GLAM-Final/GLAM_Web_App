@@ -5,9 +5,6 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 
 
 def safe_float(v: Any) -> Optional[float]:
@@ -20,6 +17,7 @@ def safe_float(v: Any) -> Optional[float]:
 
 
 def summarize_run_dir(run_dir: Path, default_window_seconds: float = 5.0, patient_meta: Optional[Dict[str, Dict[str, Any]]] = None) -> Optional[Dict]:
+    import pandas as pd
     win_json = run_dir / "window_report.json"
     win_csv = run_dir / "window_report.csv"
     data = None
@@ -176,7 +174,8 @@ def summarize_run_dir(run_dir: Path, default_window_seconds: float = 5.0, patien
     }
 
 
-def aggregate_reasoning_summaries(run_dirs: List[Path], output_dir: Path, patient_meta: Optional[Dict[str, Dict[str, Any]]] = None) -> List[Dict]:
+def aggregate_reasoning_summaries(run_dirs: List[Any], output_dir: Any, patient_meta: Optional[Dict[str, Dict[str, Any]]] = None) -> List[Dict]:
+    import pandas as pd
     output_dir.mkdir(parents=True, exist_ok=True)
     reasoning_summaries = []
     for run_dir in run_dirs:
@@ -193,7 +192,8 @@ def aggregate_reasoning_summaries(run_dirs: List[Path], output_dir: Path, patien
     return reasoning_summaries
 
 
-def load_reasoning_df(output_dir: Path) -> Optional[pd.DataFrame]:
+def load_reasoning_df(output_dir: Path) -> Optional[Any]:
+    import pandas as pd
     reasoning_json = output_dir / "reasoning_summary.json"
     if reasoning_json.exists():
         try:
@@ -203,7 +203,11 @@ def load_reasoning_df(output_dir: Path) -> Optional[pd.DataFrame]:
     return None
 
 
-def plot_patient_summary(df: pd.DataFrame, output_dir: Path, window_seconds: float = 5.0) -> None:
+def plot_patient_summary(df, output_dir: Path, window_seconds: float = 5.0) -> None:
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import numpy as np
+
     if df is None or df.empty:
         print("No patient summaries to visualize")
         return
