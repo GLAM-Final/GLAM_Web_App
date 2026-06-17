@@ -1,19 +1,27 @@
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 import statistics
 
 import librosa
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch_geometric.data import Data
-from torch_geometric.nn import GATConv, SAGEConv, BatchNorm
 
+def get_torch_nn():
+    import torch.nn as nn
+    return nn
 
-class ImprovedRespiratoryGAT(nn.Module):
+class ImprovedRespiratoryGAT(object): # Inherit from object initially
+    def __new__(cls, *args, **kwargs):
+        import torch.nn as nn
+        # Dynamically ensure we inherit from nn.Module when instantiated
+        if not issubclass(cls, nn.Module):
+            cls.__bases__ = (nn.Module,)
+        return super(ImprovedRespiratoryGAT, cls).__new__(cls)
+
     def __init__(self, input_dim=768, hidden_dim=256, num_layers=4, num_heads=4, dropout=0.4):
+        import torch
+        import torch.nn as nn
+        from torch_geometric.nn import GATConv, SAGEConv, BatchNorm
         super().__init__()
         self.input_proj = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -54,7 +62,9 @@ class ImprovedRespiratoryGAT(nn.Module):
         self.log_var_crackle = nn.Parameter(torch.tensor(0.0))
         self.dropout = dropout
 
-    def forward(self, data: Data):
+    def forward(self, data):
+        import torch
+        import torch.nn.functional as F
         x, edge_index = data.x, data.edge_index
         batch = data.batch if hasattr(data, "batch") else None
 
@@ -92,7 +102,8 @@ class ImprovedRespiratoryGAT(nn.Module):
         return w_logits, c_logits
 
 
-def load_gnn_model(checkpoint_path: str, device: torch.device) -> ImprovedRespiratoryGAT:
+def load_gnn_model(checkpoint_path: str, device: Any):
+    import torch
     model = ImprovedRespiratoryGAT(input_dim=768, hidden_dim=256, num_layers=4, num_heads=4, dropout=0.4)
     model = model.to(device)
     if os.path.exists(checkpoint_path):
@@ -110,7 +121,8 @@ def load_gnn_model(checkpoint_path: str, device: torch.device) -> ImprovedRespir
     return model
 
 
-def build_chain_edge_index(n: int) -> torch.Tensor:
+def build_chain_edge_index(n: int):
+    import torch
     if n <= 1:
         return torch.empty((2, 0), dtype=torch.long)
     edges = [[i, i + 1] for i in range(n - 1)] + [[i + 1, i] for i in range(n - 1)]
