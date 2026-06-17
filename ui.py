@@ -10,7 +10,7 @@ import gradio as gr
 # (Kept intact to connect with your backend framework logic)
 from interface import (
     load_patient_registry, save_patient_registry, separate_audio, monitoring_table_rows, _copy_audio_to_storage,
-    run_end_to_end, search_history_records, search_reasoning_records, _initialize_models_for_live_processing,
+    run_end_to_end, search_history_records, search_reasoning_records, _initialize_models_for_live_processing, RESULTS_DIR,
     process_audio_chunk_for_separation, infer_on_separated_chunk, _live_sr,
     LIVE_PROCESSING_WINDOW_SECONDS, LIVE_OVERLAP_SECONDS, resolve_patient_names, save_audio_file, predict_sources
 )
@@ -464,6 +464,7 @@ def create_ui():
                 live_patient_names_state,
             ],
             outputs=[live_audio_buffer_state, live_separated_buffers_state, live_patient_managers_state, live_current_timestamps_state, live_monitor_table, live_monitor_status, live_out_audio_1, live_out_audio_2, live_out_audio_3, live_patient_names_state],
+            concurrency_limit=5,
         )
 
         stop_live_btn.click(
@@ -493,5 +494,6 @@ if __name__ == "__main__":
         server_name=host,
         server_port=int(os.environ.get("PORT", 7860)),
         theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
-        css=css_styles
+        css=css_styles,
+        allowed_paths=[str(RESULTS_DIR.resolve())]
     )
