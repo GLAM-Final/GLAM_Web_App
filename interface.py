@@ -3,19 +3,14 @@ import os
 import sqlite3
 import shutil
 import time
-import torch
-import torchaudio
 import tempfile
-import matplotlib.pyplot as plt
 import numpy as np
 import soundfile as sf
-import librosa
 from pathlib import Path
 from itertools import permutations
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from reasoning_pipeline import aggregate_reasoning_summaries
-from model import load_model
 
 MODEL_PATH = "best_audio_separation_model.pt"
 _model = None
@@ -24,6 +19,7 @@ _model = None
 def get_model():
     global _model
     if _model is None:
+        from model import load_model
         _model = load_model(MODEL_PATH)
     return _model
 
@@ -47,6 +43,8 @@ def apply_wiener_filter(est_sources, mixture, iterations=1):
 
 
 def save_waveform_plot(waveform, sample_rate, title, path=None):
+    import matplotlib.pyplot as plt
+    import torch
     if waveform.ndim > 1:
         waveform = waveform.mean(dim=0)
     data = waveform.cpu().numpy()
@@ -71,6 +69,9 @@ def save_waveform_plot(waveform, sample_rate, title, path=None):
 
 
 def predict_sources(waveform, sr, reference_waveforms=None):
+    import torch
+    import torchaudio
+
     if waveform.shape[0] > 1:
         waveform = waveform.mean(dim=0, keepdim=True)
 
@@ -115,10 +116,11 @@ def predict_sources(waveform, sr, reference_waveforms=None):
         
         refined_preds = np.array([refined_preds[p] for p in best_perm])
 
-    return torch.from_numpy(refined_preds), 16000
+    return torch.from_numpy(refined_preds.copy()), 16000
 
 
 def save_separated_sources(prediction, output_dir, base_name, patient_names=None):
+    import torch
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -158,7 +160,9 @@ def separate_audio_file(audio_path, output_dir, patient_names=None):
 
 
 def load_audio(audio_path):
+    import torch
     try:
+        import torchaudio
         return torchaudio.load(audio_path)
     except (ImportError, RuntimeError, OSError):
         try:
@@ -169,6 +173,7 @@ def load_audio(audio_path):
                 waveform = torch.from_numpy(data.T)
             return waveform, sr
         except (RuntimeError, ValueError, OSError):
+            import librosa
             data, sr = librosa.load(audio_path, sr=None, mono=False)
             if data.ndim == 1:
                 waveform = torch.from_numpy(data).unsqueeze(0)
@@ -178,6 +183,7 @@ def load_audio(audio_path):
 
 
 def save_audio_file(path, waveform, sample_rate):
+    import torch
     audio = waveform.detach().cpu().numpy()
     if audio.ndim == 1:
         audio = audio[np.newaxis, :]
@@ -445,7 +451,8 @@ def append_history_record(record: Dict[str, object], history_path: Optional[Path
     return path
 
 
-def load_wav2vec(device: torch.device):
+def load_wav2vec(device):
+    import torch
     import importlib
 
     try:
@@ -476,6 +483,7 @@ _live_device = None
 
 
 def _initialize_models_for_live_processing():
+    import torch
     global _live_processor, _live_wav2vec_model, _live_gnn_model, _live_device
     if _live_device is None:
         _live_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -489,6 +497,7 @@ def _initialize_models_for_live_processing():
 
 def process_audio_chunk_for_separation(audio_chunk_tensor):
     """Expects a 1D tensor at 16kHz."""
+    import torch
     prediction, _ = predict_sources(audio_chunk_tensor.unsqueeze(0), 16000)
     return prediction
 
@@ -504,6 +513,7 @@ def infer_on_separated_chunk(
     timestamp,
 ):
     """Runs behavior inference and clinical state tracking on a single audio chunk."""
+    import torch
     inputs = processor(separated_chunk_np, sampling_rate=16000, return_tensors="pt", padding=True)
     input_values = inputs.input_values.to(device)
 
@@ -531,6 +541,7 @@ def run_end_to_end(
     gnn_checkpoint: Optional[str] = None,
     device_str: Optional[str] = None,
 ):
+    import torch
     if not mix_audio_path:
         raise ValueError("No mixture audio file provided.")
 
@@ -608,7 +619,7 @@ def monitoring_table_rows(results_path: Optional[Path] = None):
     return rows
 
 
-def search_history_records(query: str, history_path: Optional[Path] = None):
+def search_history_records(query: str, history_path: Optional[Any] = None):
     if not query:
         return []
     query_lower = query.strip().lower()
@@ -632,7 +643,7 @@ def search_history_records(query: str, history_path: Optional[Path] = None):
     return results
 
 
-def search_reasoning_records(query: str, results_path: Optional[Path] = None):
+def search_reasoning_records(query: str, results_path: Optional[Any] = None):
     if not query:
         return []
     query_lower = query.strip().lower()
@@ -654,6 +665,8 @@ def search_reasoning_records(query: str, results_path: Optional[Path] = None):
 
 def separate_audio(audio_path, patient_names=None, reference_audio_paths=None): # New argument
 
+    import torch
+    import torchaudio
     waveform, sr = load_audio(audio_path)
     
     # Load reference waveforms if provided for alignment
