@@ -1,5 +1,5 @@
 
-# GLAM Pipeline Respiratory Audio Pipeline
+# GLAM Respiratory Audio Pipeline
 
 This repository includes a respiratory audio separation pipeline built around a local SepFormer model and a clinical reasoning/GNN inference path.
 
