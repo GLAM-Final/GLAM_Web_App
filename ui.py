@@ -275,11 +275,11 @@ def create_ui():
 
             # Content Area
             with gr.Column(scale=4):
-                live_audio_buffer_state = gr.State(value=None)
-                live_separated_buffers_state = gr.State(value=[])
-                live_patient_managers_state = gr.State(value=[None, None, None])
-                live_current_timestamps_state = gr.State(value=[0.0, 0.0, 0.0])
-                live_patient_names_state = gr.State(value=[])
+                live_audio_buffer_state = gr.State()
+                live_separated_buffers_state = gr.State()
+                live_patient_managers_state = gr.State()
+                live_current_timestamps_state = gr.State()
+                live_patient_names_state = gr.State()
 
                 # Registration Page
                 with gr.Column(visible=True) as reg_page:
@@ -332,6 +332,7 @@ def create_ui():
                     gr.Markdown("#### Immediate Findings")
                     monitor_table_small = gr.Dataframe(
                         headers=["Patient Name", "overall_state", "mean_wheeze_prob", "mean_crackle_prob", "breathing_rate_mean", "comment"],
+                        datatype=["str", "str", "number", "number", "number", "str"],
                         interactive=False,
                     )
 
@@ -344,6 +345,7 @@ def create_ui():
                                     
                     history_results = gr.Dataframe(
                         headers=["Patient Name", "overall_state", "mean_wheeze_prob", "mean_crackle_prob", "breathing_rate_mean", "comment"],
+                        datatype=["str", "str", "number", "number", "number", "str"],
                         interactive=False,
                     )
                     history_msg = gr.Textbox(label="Search Results", interactive=False, elem_classes="vibrant-status")
@@ -384,18 +386,20 @@ def create_ui():
                                 sources=["microphone"],
                                 streaming=True,
                                 label="Live Microphone Input",
-                                interactive=False,
+                                type="numpy",
+                                interactive=True,
                             )
                         with gr.Column(scale=2):
                             gr.Markdown("#### Live Separated Sources")
                             with gr.Row():
-                                live_out_audio_1 = gr.Audio(label="Live Patient 1", interactive=False)
-                                live_out_audio_2 = gr.Audio(label="Live Patient 2", interactive=False)
-                                live_out_audio_3 = gr.Audio(label="Live Patient 3", interactive=False)
+                                live_out_audio_1 = gr.Audio(label="Live Patient 1", interactive=False, type="numpy")
+                                live_out_audio_2 = gr.Audio(label="Live Patient 2", interactive=False, type="numpy")
+                                live_out_audio_3 = gr.Audio(label="Live Patient 3", interactive=False, type="numpy")
 
                     gr.Markdown("#### Live Findings")
                     live_monitor_table = gr.Dataframe(
                         headers=["Patient Name", "overall_state", "mean_wheeze_prob", "mean_crackle_prob", "breathing_rate_mean", "comment"],
+                        datatype=["str", "str", "number", "number", "number", "str"],
                         interactive=False,
                     )
                     live_monitor_status = gr.Textbox(label="Live Status", interactive=False, elem_classes="vibrant-status")
