@@ -261,7 +261,7 @@ def stop_live_monitoring_session():
 # ==========================================
 def create_ui():
     # Pass structural embedded CSS string variable safely inside Blocks
-    with gr.Blocks(theme=gr.themes.Soft()) as demo:
+    with gr.Blocks() as demo:
         gr.HTML("<div class='header-box'><h1>Patient Monitoring System</h1></div>")
 
         with gr.Row():
@@ -275,11 +275,11 @@ def create_ui():
 
             # Content Area
             with gr.Column(scale=4):
-                live_audio_buffer_state = gr.State()
-                live_separated_buffers_state = gr.State()
-                live_patient_managers_state = gr.State()
-                live_current_timestamps_state = gr.State()
-                live_patient_names_state = gr.State()
+                live_audio_buffer_state = gr.State(value=None)
+                live_separated_buffers_state = gr.State(value=[])
+                live_patient_managers_state = gr.State(value=[None, None, None])
+                live_current_timestamps_state = gr.State(value=[0.0, 0.0, 0.0])
+                live_patient_names_state = gr.State(value=[None, None, None])
 
                 # Registration Page
                 with gr.Column(visible=True) as reg_page:
@@ -320,14 +320,14 @@ def create_ui():
                     gr.Markdown("#### Separated Patient Data")
                     with gr.Row():
                         with gr.Column(variant="panel"):
-                            out_audio_1 = gr.Audio(label="Patient 1 Audio")
-                            out_wave_1 = gr.Image(label="Waveform 1")
+                            out_audio_1 = gr.Audio(label="Patient 1 Audio", type="filepath")
+                            out_wave_1 = gr.Image(label="Waveform 1", type="filepath")
                         with gr.Column(variant="panel"):
-                            out_audio_2 = gr.Audio(label="Patient 2 Audio")
-                            out_wave_2 = gr.Image(label="Waveform 2")
+                            out_audio_2 = gr.Audio(label="Patient 2 Audio", type="filepath")
+                            out_wave_2 = gr.Image(label="Waveform 2", type="filepath")
                         with gr.Column(variant="panel"):
-                            out_audio_3 = gr.Audio(label="Patient 3 Audio")
-                            out_wave_3 = gr.Image(label="Waveform 3")
+                            out_audio_3 = gr.Audio(label="Patient 3 Audio", type="filepath")
+                            out_wave_3 = gr.Image(label="Waveform 3", type="filepath")
 
                     gr.Markdown("#### Immediate Findings")
                     monitor_table_small = gr.Dataframe(
@@ -479,17 +479,19 @@ def create_ui():
 # ==========================================
 # 5. EXECUTION CONTAINER LIFECYCLE
 # ==========================================
+app = create_ui()
+
 if __name__ == "__main__":
 
+    # Determine if running on Render or locally
     is_render = "RENDER" in os.environ
     host = "0.0.0.0" if is_render else "127.0.0.1"
 
-    port = int(os.environ.get("PORT", 7860))
-
+    # Execution setup aligned for Gradio structural components
     app.launch(
         share=False,
         server_name=host,
-        server_port=int(os.environ.get("PORT", 10000)),
-        css=css_styles,
-        show_error=True
+        server_port=int(os.environ.get("PORT", 7860)),
+        theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
+        css=css_styles
     )
