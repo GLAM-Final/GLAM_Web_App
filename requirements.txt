@@ -1,0 +1,11 @@
+torch
+torchaudio
+gradio==5.16.0
+librosa
+numpy
+soundfile
+matplotlib
+transformers
+huggingface_hub
+speechbrain
+torch-geometric
