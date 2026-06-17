@@ -258,6 +258,7 @@ def initialize_database():
 
 
 def _record_audio_file_metadata(path: str, file_type: str, patient_id: Optional[str] = None, notes: Optional[str] = None):
+    conn = None
     try:
         initialize_database()
         conn = _get_db_connection()
@@ -269,7 +270,8 @@ def _record_audio_file_metadata(path: str, file_type: str, patient_id: Optional[
     except Exception:
         pass
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 
 def _copy_audio_to_storage(src_path: Optional[str], subdir: str, prefix: str) -> Optional[str]:
