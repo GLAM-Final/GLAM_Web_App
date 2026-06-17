@@ -476,17 +476,18 @@ def create_ui():
 # 5. EXECUTION CONTAINER LIFECYCLE
 # ==========================================
 app = create_ui()
+print("UI created")
 
 if __name__ == "__main__":
-    # Determine if running on Render or locally
-    is_render = "RENDER" in os.environ
-    host = "0.0.0.0" if is_render else "127.0.0.1"
+    print("Launching Gradio...")
 
-    # Execution setup aligned for Gradio structural components
     app.launch(
         share=False,
-        server_name=host,
-        server_port=int(os.environ.get("PORT", 7860)),
-        theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 10000)),
+        theme=gr.themes.Soft(
+            primary_hue="indigo",
+            neutral_hue="slate"
+        ),
         css=css_styles
     )
