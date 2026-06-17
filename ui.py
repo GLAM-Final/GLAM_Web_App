@@ -4,8 +4,6 @@ import tempfile
 import traceback
 import numpy as np
 import soundfile as sf
-import torch
-import librosa
 import gradio as gr
 
 # --- Pipeline & Model Imports ---
@@ -169,6 +167,8 @@ def process_live_audio_stream(audio_chunk, live_audio_buffer, live_separated_buf
     if audio_chunk is None:
         return live_audio_buffer, live_separated_buffers, live_patient_managers, live_current_timestamps, [], "No audio received."
 
+    import librosa
+    import torch
     sr, np_audio = audio_chunk
     if sr is None or np_audio is None:
         return live_audio_buffer, live_separated_buffers, live_patient_managers, live_current_timestamps, [], "Invalid audio chunk received."
@@ -476,18 +476,18 @@ def create_ui():
 # 5. EXECUTION CONTAINER LIFECYCLE
 # ==========================================
 app = create_ui()
-print("UI created")
 
 if __name__ == "__main__":
-    print("Launching Gradio...")
 
+    # Determine if running on Render or locally
+    is_render = "RENDER" in os.environ
+    host = "0.0.0.0" if is_render else "127.0.0.1"
+
+    # Execution setup aligned for Gradio structural components
     app.launch(
         share=False,
-        server_name="0.0.0.0",
-        server_port=int(os.environ.get("PORT", 10000)),
-        theme=gr.themes.Soft(
-            primary_hue="indigo",
-            neutral_hue="slate"
-        ),
+        server_name=host,
+        server_port=int(os.environ.get("PORT", 7860)),
+        theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
         css=css_styles
     )
