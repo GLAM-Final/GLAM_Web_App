@@ -261,7 +261,7 @@ def stop_live_monitoring_session():
 # ==========================================
 def create_ui():
     # Pass structural embedded CSS string variable safely inside Blocks
-    with gr.Blocks() as demo:
+    with gr.Blocks(theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate")) as demo:
         gr.HTML("<div class='header-box'><h1>Patient Monitoring System</h1></div>")
 
         with gr.Row():
@@ -479,19 +479,17 @@ def create_ui():
 # ==========================================
 # 5. EXECUTION CONTAINER LIFECYCLE
 # ==========================================
-app = create_ui()
-
 if __name__ == "__main__":
 
-    # Determine if running on Render or locally
     is_render = "RENDER" in os.environ
     host = "0.0.0.0" if is_render else "127.0.0.1"
 
-    # Execution setup aligned for Gradio structural components
+    port = int(os.environ.get("PORT", 7860))
+
     app.launch(
         share=False,
         server_name=host,
-        server_port=int(os.environ.get("PORT", 7860)),
-        theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
-        css=css_styles
+        server_port=int(os.environ.get("PORT"))
+        css=css_styles,
+        show_error=True
     )
