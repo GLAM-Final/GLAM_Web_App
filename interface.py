@@ -707,8 +707,8 @@ def separate_audio(audio_path, patient_names=None, reference_audio_paths=None): 
     )
 
     while len(output_audio_paths) < 3:
-        output_audio_paths.append("")
+        output_audio_paths.append(None)
     while len(output_image_paths) < 3:
-        output_image_paths.append("")
+        output_image_paths.append(None)
 
     return output_audio_paths + output_image_paths
