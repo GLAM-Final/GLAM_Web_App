@@ -1,16 +1,5 @@
----
-title: SpeFormer Respiratory Audio Pipeline
-sdk: gradio
-sdk_version: 5.16.0
-python_version: 3.12
-emoji: 🏢
-colorFrom: blue
-colorTo: indigo
-pinned: false
-short_description: Respiratory monitoring system
----
 
-# SpeFormer Pipeline
+# GLAM Pipeline Respiratory Audio Pipeline
 
 This repository includes a respiratory audio separation pipeline built around a local SepFormer model and a clinical reasoning/GNN inference path.
 
