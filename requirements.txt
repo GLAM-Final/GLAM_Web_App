@@ -1,6 +1,6 @@
 torch
 torchaudio
-gradio==5.16.0
+gradio==5.17.1
 librosa
 numpy
 soundfile
