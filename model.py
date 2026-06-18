@@ -3,6 +3,7 @@ import importlib.abc
 import importlib.machinery
 import os
 import sys
+import time
 import types
 import warnings
 from pathlib import Path
@@ -108,19 +109,28 @@ def _download_missing_sepformer_files(local_dir: Path) -> None:
         status_msg = "missing" if not is_file else "empty"
         print(f"Local asset '{filename}' is {status_msg}. Downloading from '{SEPFORNER_MODEL_SOURCE}' to '{local_dir}'...")
 
-        try:
-            hf_hub_download(
-                repo_id=SEPFORNER_MODEL_SOURCE,
-                filename=filename,
-                revision=SEPFORNER_MODEL_REVISION,
-                local_dir=str(local_dir),
-                local_dir_use_symlinks=False,
-            )
-        except Exception as exc:
+        max_retries = 3
+        last_error = None
+        for attempt in range(max_retries):
+            try:
+                hf_hub_download(
+                    repo_id=SEPFORNER_MODEL_SOURCE,
+                    filename=filename,
+                    revision=SEPFORNER_MODEL_REVISION,
+                    local_dir=str(local_dir),
+                    local_dir_use_symlinks=False,
+                )
+                break
+            except Exception as exc:
+                last_error = exc
+                wait_time = 2 ** attempt
+                print(f"Attempt {attempt + 1}/{max_retries} failed for '{filename}'. Retrying in {wait_time}s...")
+                time.sleep(wait_time)
+        else:
             raise RuntimeError(
-                f"Failed to download '{filename}' from '{SEPFORNER_MODEL_SOURCE}' revision '{SEPFORNER_MODEL_REVISION}'. "
-                "Check your network connection or set SEPFORNER_MODEL_SOURCE/SEPFORNER_MODEL_REVISION to a reachable SpeechBrain model."
-            ) from exc
+                f"Failed to download '{filename}' from '{SEPFORNER_MODEL_SOURCE}' after {max_retries} attempts. "
+                f"Check network connectivity or Hugging Face Hub status. Original error: {last_error}"
+            ) from last_error
 
 
 def ensure_local_sepformer_assets() -> Path:
