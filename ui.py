@@ -88,7 +88,6 @@ def normalize_live_patient_names(selected_names):
 def predict(mix_audio, p1, p2, p3): # p1, p2, p3 are patient names
     selected_names = [n if n != "Unassigned" else None for n in [p1, p2, p3]]
 
-    # Retrieve reference audio paths for selected patients from the registry
     registry = load_patient_registry()
     reference_audio_paths = [None, None, None]
     for i, name in enumerate(selected_names):
@@ -101,16 +100,17 @@ def predict(mix_audio, p1, p2, p3): # p1, p2, p3 are patient names
         outputs, reasoning_summaries, history_record = run_end_to_end(
             mix_audio, 
             patient_names=selected_names,
-            reference_audio_paths=reference_audio_paths # Pass reference audio paths
+            reference_audio_paths=reference_audio_paths
         )
     except Exception as exc:
-        error_message = f"Error during pipeline: {exc}"
+        error_message = f"Pipeline error: {exc}"
         error_trace = traceback.format_exc()
-        return [None] * 6 + [error_message] + [[]] + [error_trace]
+        empty = [None, None, None, None, None, None]
+        return empty + [error_message, [[]], f"Error at {time.strftime('%H:%M:%S')}", error_trace]
 
     monitor_rows = monitoring_table_rows()
-    history_status = f"Separation, reasoning, and monitoring complete. History record saved at {history_record.get('timestamp')}"
-    message = f"Full pipeline complete. Separated sources generated, reasoning updated, and history stored. {len(reasoning_summaries)} reasoning summaries available."
+    history_status = f"Completed at {history_record.get('timestamp', 'unknown')}. {len(reasoning_summaries)} patient(s) processed."
+    message = f"Full pipeline complete. {len(reasoning_summaries)} reasoning summaries available."
     return outputs + [message] + [monitor_rows] + [history_status]
 
 
@@ -286,18 +286,18 @@ def create_ui():
                     gr.Markdown("### Patient Registration")
                     with gr.Row():
                         with gr.Column(variant="panel"):
-                            gr.Markdown("#### Patient 1") # This is a Markdown header, not a textbox
+                            gr.Markdown("#### Patient 1")
                             patient_name_1 = gr.Textbox(label="Name", placeholder="Enter name", elem_classes="vibrant-status")
                             ref_audio_1 = gr.Audio(label="Ref Audio", type="filepath")
                         with gr.Column(variant="panel"):
-                            gr.Markdown("#### Patient 2") # This is a Markdown header, not a textbox
+                            gr.Markdown("#### Patient 2")
                             patient_name_2 = gr.Textbox(label="Name", placeholder="Enter name", elem_classes="vibrant-status")
                             ref_audio_2 = gr.Audio(label="Ref Audio", type="filepath")
                         with gr.Column(variant="panel"):
-                            gr.Markdown("#### Patient 3") # This is a Markdown header, not a textbox
+                            gr.Markdown("#### Patient 3")
                             patient_name_3 = gr.Textbox(label="Name", placeholder="Enter name", elem_classes="vibrant-status")
                             ref_audio_3 = gr.Audio(label="Ref Audio", type="filepath")
-                                    
+                                     
                     register_btn = gr.Button("Submit Registration", variant="primary", size="lg")
                     register_status = gr.Textbox(label="Status", interactive=False, elem_classes="vibrant-status")
 
@@ -336,16 +336,16 @@ def create_ui():
                         interactive=False,
                     )
 
-                # History Page
+                 # History Page
                 with gr.Column(visible=False) as history_page:
-                    gr.Markdown("### Patient History Search")
+                    gr.Markdown('<div class="page-title">Patient History Search</div>', elem_classes="page-container")
                     with gr.Row():
                         search_query = gr.Textbox(label="Search by Patient Name or Audio ID", placeholder="Enter name...", elem_classes="vibrant-status")
                         search_button = gr.Button("Search History", variant="primary")
                                     
                     history_results = gr.Dataframe(
-                        headers=["Patient Name", "overall_state", "mean_wheeze_prob", "mean_crackle_prob", "breathing_rate_mean", "comment"],
-                        datatype=["str", "str", "number", "number", "number", "str"],
+                        headers=["Timestamp", "Audio File", "Patient Names", "Reasoning Count"],
+                        datatype=["str", "str", "str", "number"],
                         interactive=False,
                     )
                     history_msg = gr.Textbox(label="Search Results", interactive=False, elem_classes="vibrant-status")
@@ -405,17 +405,39 @@ def create_ui():
                     live_monitor_status = gr.Textbox(label="Live Status", interactive=False, elem_classes="vibrant-status")
 
         # --- Tab Routing Mechanics ---
-        def nav_reg(): return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False)
-        def nav_sep(): 
-            choices = get_registered_patient_choices()
-            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(choices=choices), gr.update(choices=choices), gr.update(choices=choices)
-        def nav_his(): return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False)
-        def nav_live(): return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+        def nav_reg():
+            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(variant="primary"), gr.update(variant="secondary"), gr.update(variant="secondary"), gr.update(variant="secondary")
 
-        btn_register.click(nav_reg, outputs=[reg_page, sep_page, history_page, live_mon_page], queue=False)
-        btn_separation.click(nav_sep, outputs=[reg_page, sep_page, history_page, live_mon_page, sep_p1, sep_p2, sep_p3], queue=False)
-        btn_history.click(nav_his, outputs=[reg_page, sep_page, history_page, live_mon_page], queue=False)
-        btn_live_mon.click(nav_live, outputs=[reg_page, sep_page, history_page, live_mon_page], queue=False)
+        def nav_sep():
+            choices = get_registered_patient_choices()
+            return gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), gr.update(variant="secondary"), gr.update(variant="primary"), gr.update(variant="secondary"), gr.update(variant="secondary"), gr.update(choices=choices), gr.update(choices=choices), gr.update(choices=choices)
+
+        def nav_his():
+            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(visible=False), gr.update(variant="secondary"), gr.update(variant="secondary"), gr.update(variant="secondary"), gr.update(variant="primary")
+
+        def nav_live():
+            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(variant="secondary"), gr.update(variant="secondary"), gr.update(variant="primary"), gr.update(variant="secondary")
+
+        btn_register.click(
+            nav_reg,
+            outputs=[reg_page, sep_page, history_page, live_mon_page, btn_register, btn_separation, btn_history, btn_live_mon],
+            queue=False,
+        )
+        btn_separation.click(
+            nav_sep,
+            outputs=[reg_page, sep_page, history_page, live_mon_page, btn_register, btn_separation, btn_history, btn_live_mon, sep_p1, sep_p2, sep_p3],
+            queue=False,
+        )
+        btn_history.click(
+            nav_his,
+            outputs=[reg_page, sep_page, history_page, live_mon_page, btn_register, btn_separation, btn_history, btn_live_mon],
+            queue=False,
+        )
+        btn_live_mon.click(
+            nav_live,
+            outputs=[reg_page, sep_page, history_page, live_mon_page, btn_register, btn_separation, btn_history, btn_live_mon],
+            queue=False,
+        )
 
         # --- Interactive Trigger Bindings ---
         register_btn.click(
@@ -477,23 +499,16 @@ def create_ui():
     return demo
 
 
-# ==========================================
-# 5. EXECUTION CONTAINER LIFECYCLE
-# ==========================================
 app = create_ui()
 
 if __name__ == "__main__":
-
-    # Determine if running on Render or locally
-    is_render = "RENDER" in os.environ
-    host = "0.0.0.0" if is_render else "127.0.0.1"
-
-    # Execution setup aligned for Gradio structural components
+    host = "0.0.0.0"
+    
     app.launch(
         share=False,
         server_name=host,
         server_port=int(os.environ.get("PORT", 7860)),
-        theme=gr.themes.Soft(primary_hue="indigo", neutral_hue="slate"), 
+        theme=gr.themes.Soft(),
         css=css_styles,
-        allowed_paths=[str(RESULTS_DIR.resolve())]
+        allowed_paths=[str(RESULTS_DIR.resolve())],
     )
