@@ -6,17 +6,10 @@ import statistics
 import librosa
 import numpy as np
 
-def get_torch_nn():
-    import torch.nn as nn
-    return nn
+import torch.nn as nn
 
-class ImprovedRespiratoryGAT(object): # Inherit from object initially
-    def __new__(cls, *args, **kwargs):
-        import torch.nn as nn
-        # Dynamically ensure we inherit from nn.Module when instantiated
-        if not issubclass(cls, nn.Module):
-            cls.__bases__ = (nn.Module,)
-        return super(ImprovedRespiratoryGAT, cls).__new__(cls)
+
+class ImprovedRespiratoryGAT(nn.Module):
 
     def __init__(self, input_dim=768, hidden_dim=256, num_layers=4, num_heads=4, dropout=0.4):
         import torch
